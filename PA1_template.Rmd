@@ -22,7 +22,7 @@ hist(temp$totalstep, xlab = "No.of steps each day", main = "Histogram of the tot
 
 ```
 
-#### 3. Mean and median number of steps taken each day
+#### 3. Mean and median number of steps taken each day: 9354.23 & 10395, respectively
 ```{r}
 mean(temp$totalstep)
 median(temp$totalstep)
@@ -56,7 +56,7 @@ newdf <- newdf %>% mutate(new_steps = ifelse(is.na(steps), average_step_interval
 
 ```
 
-- New mean and median total number of steps taken per day:
+- New mean and median total number of steps taken per day: 10766.19 for both due to the imputing method
 ```{r}
 temp <- newdf %>% group_by(date) %>% summarise(new_totalstep = sum(new_steps, na.rm = T), totalstep = sum(steps, na.rm = T))
 mean(temp$new_totalstep)
