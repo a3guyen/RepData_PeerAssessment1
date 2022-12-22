@@ -1,25 +1,90 @@
 ---
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
+title: "Course Project 1"
+date: "Date: `r format(Sys.Date(),'%d-%m-%Y')`"
+output: html_document
 ---
 
+#### 1. Code for reading in the dataset and processing the data
 
-## Loading and preprocessing the data
+```{r}
+df <- read.csv("activity.csv", sep = ",")
+str(df)
+df$date <- as.Date(df$date, format= "%Y-%m-%d")
+```
+
+#### 2. Histogram of the total number of steps taken each day
+
+```{r}
+library(dplyr)
+library(dplyr)
+temp <- df %>% group_by(date) %>% summarise(totalstep = sum(steps, na.rm = T))
+hist(temp$totalstep, xlab = "No.of steps each day", main = "Histogram of the total number of steps taken each day")
+
+```
+
+#### 3. Mean and median number of steps taken each day
+```{r}
+mean(temp$totalstep)
+median(temp$totalstep)
+
+```
+
+#### 4.Time series plot of the average number of steps taken
+```{r}
+temp <- df %>% group_by(interval) %>% summarise(average_step_interval = mean(steps, na.rm = T))
+with(temp, plot(interval, average_step_interval, type="l", xlab="Time interval", ylab="Average steps", main="The average daily activity pattern"))
+
+```
+
+#### 5. The 5-minute interval that, on average, contains the maximum number of steps:835
+```{r}
+temp$interval[temp$average_step_interval == max(temp$average_step_interval )]
+
+```
+
+#### 6. Code to describe and show a strategy for imputing missing data
+- The total number of missing values in the dataset (i.e. the total number of rows with NAs): 2304
+```{r}
+sapply(df, function(x) sum(is.na(x)))
+sum(is.na(df$steps))
+```
+
+- A strategy for filling in all of the missing values in the dataset: NA values will be filled by the mean for that 5-minute interval.A new dataset that is equal to the original dataset but with the missing data filled in:
+```{r}
+newdf <- merge(df, temp, by = "interval", all.x = T)
+newdf <- newdf %>% mutate(new_steps = ifelse(is.na(steps), average_step_interval, steps))
+
+```
+
+- New mean and median total number of steps taken per day:
+```{r}
+temp <- newdf %>% group_by(date) %>% summarise(new_totalstep = sum(new_steps, na.rm = T), totalstep = sum(steps, na.rm = T))
+mean(temp$new_totalstep)
+median(temp$new_totalstep)
+```
+
+- Do these values differ from the estimates from the first part of the assignment? YES
+
+- What is the impact of imputing missing data on the estimates of the total daily number of steps?: Imputing missing data has led to an increase in both mean and median of the estimates of the total daily number of steps
 
 
+#### 7. Histogram of the total number of steps taken each day after missing values are imputed
+```{r}
+par(mfrow=c(2,1))
+hist(temp$totalstep, xlab = "No.of steps each day", main = "Histogram of the total number of steps taken each day (without NAs)")
+hist(temp$new_totalstep, xlab = "No.of steps each day", main = "Histogram of the total number of steps taken each day (imputing NAs)")
+```
 
-## What is mean total number of steps taken per day?
+#### 8. Panel plot comparing the average number of steps taken per 5-minute interval across weekdays and weekends
+```{r}
+library(lattice)
+newdf <- newdf %>% mutate(dayoftheweek = weekdays(date)) %>% 
+        mutate(day_group = ifelse(dayoftheweek %in% c("Saturday", "Sunday"), "weekend", "weekday" )) %>% 
+        mutate(day_group = as.factor(day_group))
+temp <- newdf %>% group_by(interval, day_group) %>% summarise(average_step = mean(steps, na.rm = T))
+xyplot(average_step ~ interval| day_group, data = temp, layout=c(1,2), type = "l",
+       ylab = "Number of steps", xlab = "Interval")
+```
 
+ 
 
-
-## What is the average daily activity pattern?
-
-
-
-## Imputing missing values
-
-
-
-## Are there differences in activity patterns between weekdays and weekends?
